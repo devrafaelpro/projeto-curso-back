@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Painel de Peças{% endblock %}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f5f5f5; }
+    header { background: #1f2937; color: #fff; padding: 12px 24px; }
+    nav { display: flex; gap: 16px; align-items: center; }
+    nav a, nav button { color: #fff; text-decoration: none; background: none; border: none; cursor: pointer; font: inherit; }
+    nav .direita { margin-left: auto; display: flex; gap: 16px; align-items: center; }
+    main { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="{% url 'painel:inicio' %}"><strong>Painel de Peças</strong></a>
+      <div class="direita">
+        {% if user.is_authenticated %}
+          <span>Olá, {{ user.username }} ({{ user.get_tipo_display }})</span>
+          <form method="post" action="{% url 'contas:logout' %}">
+            {% csrf_token %}
+            <button type="submit">Sair</button>
+          </form>
+        {% else %}
+          <a href="{% url 'contas:login' %}">Entrar</a>
+          <a href="{% url 'contas:cadastro' %}">Cadastrar</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+  <main>
+    {% block conteudo %}{% endblock %}
+  </main>
+</body>
+</html>

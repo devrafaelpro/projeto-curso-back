@@ -66,7 +66,15 @@ projeto-curso-back/
 ├── contas/          # Usuários, login, cadastro e perfis
 ├── pecas/           # Catálogo e cadastro de peças
 ├── pedidos/         # Carrinho e simulação de compra
-├── painel/          # Área administrativa e relatórios
+├── painel/          # Painéis de admin, comprador e fornecedor
+│   ├── views/
+│   │   ├── admin.py
+│   │   ├── comprador.py
+│   │   └── fornecedor.py
+│   └── templates/painel/
+│       ├── admin/
+│       ├── comprador/
+│       └── fornecedor/
 ├── manage.py
 ├── requirements.txt
 └── README.md
@@ -79,7 +87,9 @@ projeto-curso-back/
 | `contas` | Autenticação e perfis de usuário | `Usuario` (com campo `tipo`) |
 | `pecas` | Catálogo de peças | `Peca` |
 | `pedidos` | Compras simuladas | `Pedido`, `ItemPedido` |
-| `painel` | Gestão administrativa e relatórios | (usa os models dos outros apps) |
+| `painel` | Painéis de cada perfil: dashboards, gestão de usuários e relatórios | (usa os models dos outros apps) |
+
+**Regra geral:** os apps `contas`, `pecas` e `pedidos` têm os **models e as ações** (cadastrar, comprar, logar). O `painel` **mostra e organiza** esses dados para cada perfil.
 
 ### Tipos de usuário
 
@@ -185,14 +195,86 @@ git push
 
 ## Divisão de tarefas
 
-| Integrante | Branch | App / Responsabilidade |
-|---|---|---|
-| Rafael | `branch-rafael` | Estrutura base, `contas` (login, cadastro, perfis) |
-| Integrante 2 | `branch-2` | `pecas` (CRUD do fornecedor, catálogo) |
-| Integrante 3 | `branch-3` | `pedidos` (carrinho e simulação de compra) |
-| Todos | — | `painel` (gestão administrativa e relatórios) |
+| Integrante | Branch | Apps | Resumo |
+|---|---|---|---|
+| Rafael | `rafael` | `contas` + `pecas` | Base do projeto, login e permissões, cadastro de peças |
+| Murilo | `murilo` | `pedidos` | Catálogo, carrinho e compra simulada |
+| Pablo | `pablo` | `painel` | Painéis de admin, comprador e fornecedor |
 
-> Ajuste os nomes e as branches conforme a equipe.
+> Ajuste os nomes das branches se forem diferentes no repositório.
+
+### Rafael: `contas` + `pecas`
+
+**Base (entregar primeiro na `main`)**
+- [x] Estrutura do projeto e apps
+- [x] User customizado com `tipo` (comprador, fornecedor, admin)
+- [ ] `base.html` com menu e layout que todos os templates herdam
+- [ ] Decorators `@admin_required`, `@fornecedor_required`, `@comprador_required`
+
+**Contas**
+- [ ] Login e logout
+- [ ] Cadastro com escolha de tipo (comprador ou fornecedor)
+- [ ] Redirecionamento após o login para o painel do perfil
+
+**Peças**
+- [ ] Model `Peca`: nome, descrição, preço, estoque, categoria, imagem, fornecedor, ativo
+- [ ] Cadastrar, editar e excluir peça (o fornecedor só mexe nas próprias)
+- [ ] Listagem "Minhas peças"
+- [ ] Registrar `Peca` no Django Admin
+
+### Murilo: `pedidos`
+
+- [ ] Catálogo de peças com busca e filtro por categoria
+- [ ] Página de detalhe da peça
+- [ ] Carrinho: adicionar, remover e alterar quantidade
+- [ ] Models `Pedido` e `ItemPedido`
+- [ ] Finalizar compra simulada, com baixa de estoque
+- [ ] Página "Meus pedidos" com detalhe de cada pedido
+- [ ] Registrar `Pedido` no Django Admin
+
+### Pablo: `painel`
+
+**Painel do admin** (`/painel/admin/`)
+- [ ] Dashboard: total de usuários, peças, pedidos e valor vendido
+- [ ] Gestão de usuários: listar, criar, editar, desativar e excluir
+- [ ] Moderação de peças: listar todas e excluir
+- [ ] Relatórios: vendas por período, peças mais vendidas, ranking de fornecedores e compradores
+
+**Painel do fornecedor** (`/painel/fornecedor/`)
+- [ ] Resumo: total de peças, peças com estoque baixo, vendas das suas peças
+- [ ] Atalhos para "Cadastrar peça" e "Minhas peças"
+
+**Painel do comprador** (`/painel/comprador/`)
+- [ ] Resumo: últimos pedidos e total gasto
+- [ ] Atalhos para catálogo, carrinho e "Meus pedidos"
+
+### Dependências entre as partes
+
+```
+Rafael: User + decorators + base.html ──┬──> Murilo (pedidos)
+Rafael: model Peca ─────────────────────┤
+                                        └──> Pablo (painel)
+Murilo: models Pedido / ItemPedido ─────────> Pablo (relatórios e resumos)
+```
+
+**Ordem sugerida**
+1. **Rafael** sobe na `main` o User, os decorators, o `base.html` e o model `Peca` (mesmo sem as telas).
+2. **Murilo** sobe os models `Pedido` e `ItemPedido` na `main` assim que estiverem definidos.
+3. Todos rodam `git merge main` e seguem nas próprias telas.
+4. **Pablo** pode começar pela estrutura dos três painéis e pela gestão de usuários. Enquanto os models de pedido não chegam, usa dados criados no Django Admin para testar.
+5. Os relatórios ficam por último, quando já houver pedidos.
+
+**Combinado entre os três:** os nomes das rotas (`name=` nas urls), para os atalhos do painel apontarem para as telas certas. Sugestão:
+
+| Rota | Nome | Dono |
+|---|---|---|
+| Login | `contas:login` | Rafael |
+| Cadastrar peça | `pecas:nova` | Rafael |
+| Minhas peças | `pecas:minhas` | Rafael |
+| Catálogo | `pedidos:catalogo` | Murilo |
+| Carrinho | `pedidos:carrinho` | Murilo |
+| Meus pedidos | `pedidos:meus` | Murilo |
+| Painel (redireciona por tipo) | `painel:inicio` | Pablo |
 
 ---
 
@@ -200,17 +282,13 @@ git push
 
 - [x] Estrutura base do projeto
 - [x] User customizado com tipos de perfil
-- [ ] Login, logout e cadastro
-- [ ] Redirecionamento por tipo de usuário após o login
-- [ ] Controle de acesso por perfil
-- [ ] CRUD de peças (fornecedor)
-- [ ] Catálogo com busca e filtros
-- [ ] Carrinho de compras
-- [ ] Simulação de compra e baixa de estoque
-- [ ] Histórico de pedidos
-- [ ] Gestão de usuários no painel admin
-- [ ] Relatórios de vendas
-- [ ] Layout e estilização das páginas
+- [ ] Login, cadastro e permissões
+- [ ] CRUD de peças
+- [ ] Catálogo e carrinho
+- [ ] Compra simulada e histórico
+- [ ] Painéis de admin, fornecedor e comprador
+- [ ] Relatórios
+- [ ] Layout final e estilização
 - [ ] Testes automatizados
 
 ---
@@ -218,8 +296,8 @@ git push
 ## Equipe
 
 - **Rafael Victor**: [@devrafaelpro](https://github.com/devrafaelpro)
-- **Integrante 2**: [@usuario](https://github.com/usuario)
-- **Integrante 3**: [@usuario](https://github.com/usuario)
+- **Murilo**: [@usuario](https://github.com/usuario)
+- **Pablo**: [@usuario](https://github.com/usuario)
 
 ---
 
