@@ -1,1 +1,226 @@
-#Teste
+# Painel de Venda de Peças
+
+Sistema web em **Django** para compra e venda de peças, desenvolvido como projeto do curso de Back-end.
+
+A plataforma conecta **fornecedores**, que cadastram peças, a **compradores**, que simulam compras. Um **administrador** gerencia usuários, produtos e relatórios.
+
+---
+
+## Sumário
+
+- [Funcionalidades](#funcionalidades)
+- [Tecnologias](#tecnologias)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Como rodar o projeto](#como-rodar-o-projeto)
+- [Fluxo de trabalho com Git](#fluxo-de-trabalho-com-git)
+- [Divisão de tarefas](#divisão-de-tarefas)
+- [Roadmap](#roadmap)
+- [Equipe](#equipe)
+
+---
+
+## Funcionalidades
+
+### Comprador
+- Cadastro e login
+- Navegar pelo catálogo de peças
+- Buscar e filtrar peças
+- Adicionar peças ao carrinho
+- Simular a compra
+- Consultar o histórico de pedidos
+
+### Fornecedor
+- Cadastro e login
+- Cadastrar, editar e excluir as próprias peças
+- Controlar o estoque
+- Ver os pedidos que incluem suas peças
+
+### Administrador
+- Adicionar, editar, desativar e excluir usuários
+- Excluir ou moderar peças de qualquer fornecedor
+- Relatórios: vendas, peças mais vendidas, fornecedores e compradores ativos
+- Acesso completo ao Django Admin
+
+---
+
+## Tecnologias
+
+- **Python 3**
+- **Django**
+- **SQLite** (banco de desenvolvimento)
+- **HTML + CSS** (templates do Django)
+- **Git + GitHub** (versionamento)
+- **GitHub Codespaces** (ambiente de desenvolvimento na nuvem)
+
+---
+
+## Estrutura do projeto
+
+```
+projeto-curso-back/
+├── config/          # Configurações gerais do projeto
+│   ├── settings.py  # Apps instalados, banco, idioma, segurança
+│   ├── urls.py      # Rotas principais
+│   ├── wsgi.py
+│   └── asgi.py
+├── contas/          # Usuários, login, cadastro e perfis
+├── pecas/           # Catálogo e cadastro de peças
+├── pedidos/         # Carrinho e simulação de compra
+├── painel/          # Área administrativa e relatórios
+├── manage.py
+├── requirements.txt
+└── README.md
+```
+
+### Responsabilidade de cada app
+
+| App | Responsabilidade | Principais models |
+|---|---|---|
+| `contas` | Autenticação e perfis de usuário | `Usuario` (com campo `tipo`) |
+| `pecas` | Catálogo de peças | `Peca` |
+| `pedidos` | Compras simuladas | `Pedido`, `ItemPedido` |
+| `painel` | Gestão administrativa e relatórios | (usa os models dos outros apps) |
+
+### Tipos de usuário
+
+O projeto usa um **User customizado** (`contas.Usuario`), definido em `AUTH_USER_MODEL`, com o campo `tipo`:
+
+| Tipo | Valor | Acesso |
+|---|---|---|
+| Comprador | `comprador` | Catálogo, carrinho e pedidos |
+| Fornecedor | `fornecedor` | Cadastro e gestão das próprias peças |
+| Administrador | `admin` | Painel administrativo completo |
+
+### Relacionamentos
+
+```
+Usuario (fornecedor) 1 ──── N Peca
+Usuario (comprador)  1 ──── N Pedido
+Pedido               1 ──── N ItemPedido N ──── 1 Peca
+```
+
+---
+
+## Como rodar o projeto
+
+### 1. Clonar o repositório
+```bash
+git clone https://github.com/devrafaelpro/projeto-curso-back.git
+cd projeto-curso-back
+```
+
+Se estiver usando o **GitHub Codespaces**, basta abrir o repositório em **Code → Codespaces → Create codespace**.
+
+### 2. Criar e ativar o ambiente virtual
+```bash
+python -m venv .venv
+source .venv/bin/activate        # Linux / macOS / Codespaces
+# .venv\Scripts\activate         # Windows
+```
+
+### 3. Instalar as dependências
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Criar o banco de dados
+```bash
+python manage.py migrate
+```
+
+### 5. Criar um superusuário (admin)
+```bash
+python manage.py createsuperuser
+```
+
+### 6. Rodar o servidor
+```bash
+python manage.py runserver
+```
+
+Acesse `http://localhost:8000`. O painel do Django fica em `http://localhost:8000/admin`.
+
+> **Codespaces:** abra a porta 8000 pelo aviso que aparece ou pela aba **Ports**. Os endereços do Codespaces já estão liberados em `CSRF_TRUSTED_ORIGINS` no `settings.py`.
+
+---
+
+## Fluxo de trabalho com Git
+
+O repositório tem a branch `main` e uma branch para cada integrante.
+
+### Primeira vez
+```bash
+git clone https://github.com/devrafaelpro/projeto-curso-back.git
+cd projeto-curso-back
+git switch nome-da-sua-branch
+```
+
+### Dia a dia
+```bash
+git pull                          # atualiza sua branch
+git merge main                    # traz as novidades da main
+# ... programa ...
+git add .
+git commit -m "descrição do que foi feito"
+git push
+```
+
+### Entregando para a main
+1. Faça o push da sua branch.
+2. No GitHub, abra um **Pull Request** da sua branch para a `main`.
+3. Peça para alguém da equipe revisar.
+4. Depois do merge, todos rodam `git merge main` nas próprias branches.
+
+### Boas práticas
+- **Nunca** faça commit direto na `main`.
+- Rode `git merge main` com frequência para evitar conflitos grandes.
+- Ao instalar um pacote novo, atualize o `requirements.txt`:
+  ```bash
+  pip freeze > requirements.txt
+  ```
+- Não suba `.venv/`, `db.sqlite3` nem `.env`. Eles já estão no `.gitignore`.
+- Se alterar algum model, rode `makemigrations` e faça commit das migrations geradas.
+
+---
+
+## Divisão de tarefas
+
+| Integrante | Branch | App / Responsabilidade |
+|---|---|---|
+| Rafael | `branch-rafael` | Estrutura base, `contas` (login, cadastro, perfis) |
+| Integrante 2 | `branch-2` | `pecas` (CRUD do fornecedor, catálogo) |
+| Integrante 3 | `branch-3` | `pedidos` (carrinho e simulação de compra) |
+| Todos | — | `painel` (gestão administrativa e relatórios) |
+
+> Ajuste os nomes e as branches conforme a equipe.
+
+---
+
+## Roadmap
+
+- [x] Estrutura base do projeto
+- [x] User customizado com tipos de perfil
+- [ ] Login, logout e cadastro
+- [ ] Redirecionamento por tipo de usuário após o login
+- [ ] Controle de acesso por perfil
+- [ ] CRUD de peças (fornecedor)
+- [ ] Catálogo com busca e filtros
+- [ ] Carrinho de compras
+- [ ] Simulação de compra e baixa de estoque
+- [ ] Histórico de pedidos
+- [ ] Gestão de usuários no painel admin
+- [ ] Relatórios de vendas
+- [ ] Layout e estilização das páginas
+- [ ] Testes automatizados
+
+---
+
+## Equipe
+
+- **Rafael Victor**: [@devrafaelpro](https://github.com/devrafaelpro)
+- **Integrante 2**: [@usuario](https://github.com/usuario)
+- **Integrante 3**: [@usuario](https://github.com/usuario)
+
+---
+
+Projeto acadêmico desenvolvido para o curso de Back-end.
